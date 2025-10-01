@@ -6,7 +6,8 @@
     - name: Ensure Python is installed (needed for Ansible modules)
       raw: |
         apt-get update -y && apt-get install -y python3
-      changed_when: false
+      register: python_install
+      changed_when: "'Setting up python3' in python_install.stdout"
 
     - name: Test connection
       raw: echo "Connected to $(hostname)"
