@@ -1,0 +1,13 @@
+---
+- name: Print hello from all hosts
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Echo hello and show hostname
+      raw: echo "Hello from $(hostname)"
+      register: output
+      changed_when: false
+
+    - name: Display output
+      debug:
+        msg: "{{ output.stdout_lines }}"
