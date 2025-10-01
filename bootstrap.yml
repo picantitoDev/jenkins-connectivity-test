@@ -1,24 +1,14 @@
 ---
-- name: Bootstrap - Accept SSH host keys on first contact
+- name: Bootstrap all hosts
   hosts: all
   gather_facts: false
   tasks:
-    - name: Create known_hosts file if it doesn't exist
-      delegate_to: localhost
-      file:
-        path: ~/.ssh/known_hosts
-        state: touch
-        mode: '0644'
-      run_once: true
-
-    - name: Accept SSH host keys automatically
-      shell: |
-        ssh-keyscan -H {{ ansible_host }} >> ~/.ssh/known_hosts 2>/dev/null
-      delegate_to: localhost
+    - name: Ensure Python is installed (needed for Ansible modules)
+      raw: |
+        apt-get update -y && apt-get install -y python3
       changed_when: false
-      ignore_errors: true
 
-    - name: Test connection with raw command
+    - name: Test connection
       raw: echo "Connected to $(hostname)"
       register: test_output
 
