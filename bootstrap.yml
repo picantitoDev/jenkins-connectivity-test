@@ -3,18 +3,24 @@
   hosts: all
   gather_facts: false
   tasks:
-    - name: Add host key to known_hosts using ssh-keyscan
+    - name: Scan host key
+      delegate_to: localhost
+      shell: "ssh-keyscan -T 5 -H {{ ansible_host }} 2>/dev/null || true"
+      register: scanned_key
+      changed_when: false
+
+    - name: Add host key to known_hosts if present
       ansible.builtin.known_hosts:
         path: "~/.ssh/known_hosts"
         name: "{{ ansible_host }}"
-        key: "{{ lookup('pipe', 'ssh-keyscan -T 5 -H ' + ansible_host + ' 2>/dev/null || true') }}"
+        key: "{{ scanned_key.stdout }}"
       delegate_to: localhost
-      run_once: false
+      when: scanned_key.stdout != ""
 
     - name: Test connection
       raw: echo "Connected to $(hostname)"
       register: test_output
-      ignore_errors: true   # don't fail whole play if one host is unreachable
+      ignore_errors: true
 
     - name: Show connection result
       debug:
