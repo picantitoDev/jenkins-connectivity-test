@@ -1,4 +1,5 @@
-- name: Bootstrap playbook
+- name: Bootstrap connectivity
+  hosts: all            # or "localhost" if you only ever run locally
   gather_facts: false
 
   tasks:
