@@ -3,6 +3,14 @@
   hosts: all
   gather_facts: false
   tasks:
+    - name: Ensure host key is in known_hosts
+      ansible.builtin.known_hosts:
+        path: "~/.ssh/known_hosts"
+        name: "{{ inventory_hostname }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan -H ' + ansible_host) }}"
+      delegate_to: localhost
+      run_once: false
+
     - name: Test connection
       raw: echo "Connected to $(hostname)"
       register: test_output
