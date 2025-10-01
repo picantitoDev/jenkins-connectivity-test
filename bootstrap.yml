@@ -1,9 +1,17 @@
 ---
-- name: Connectivity check
+- name: Bootstrap connectivity
   hosts: all
   gather_facts: false
   tasks:
-    - name: Test connection
+    - name: Refresh host key in known_hosts
+      delegate_to: localhost
+      ansible.builtin.known_hosts:
+        path: "~/.ssh/known_hosts"
+        name: "{{ ansible_host }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan -T 5 -H ' + ansible_host) }}"
+      ignore_errors: true  # avoids failing if a host is still booting
+
+    - name: Test connectivity
       raw: echo "Connected to $(hostname)"
       register: test_output
       ignore_errors: true
