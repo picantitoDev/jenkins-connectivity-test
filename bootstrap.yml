@@ -1,15 +1,26 @@
----
-- name: Bootstrap connectivity
-  hosts: all
+- name: Bootstrap playbook
   gather_facts: false
+
   tasks:
-    - name: Refresh host key in known_hosts
+    - name: Remove old host key (if present)
+      delegate_to: localhost
+      shell: ssh-keygen -R {{ ansible_host }}
+      ignore_errors: true
+      changed_when: false
+
+    - name: Scan and capture new host key
+      delegate_to: localhost
+      shell: ssh-keyscan -T 5 -H {{ ansible_host }} 2>/dev/null
+      register: scanned_key
+      changed_when: false
+      failed_when: scanned_key.rc != 0 and scanned_key.stdout == ""
+
+    - name: Add new host key to known_hosts
       delegate_to: localhost
       ansible.builtin.known_hosts:
         path: "~/.ssh/known_hosts"
         name: "{{ ansible_host }}"
-        key: "{{ lookup('pipe', 'ssh-keyscan -T 5 -H ' + ansible_host) }}"
-      ignore_errors: true  # avoids failing if a host is still booting
+        key: "{{ scanned_key.stdout }}"
 
     - name: Test connectivity
       raw: echo "Connected to $(hostname)"
